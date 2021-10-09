@@ -1,0 +1,236 @@
+# Emulate s3ObjectCreate events from this bucket. Copy your test files here.
+dataBucket: bq-shakhomirov.bigquery.aws       # your staging s3 bucket.
+key: data/                                    # optional folder key.
+
+gcp:
+  gcpProjectId: bq-shakhomirov                # your gcp project used as staging env for BigQuery.
+
+Tables:
+  -
+    pipeName: accounting_tax_type
+    bigqueryName: custom_tax_type 
+    datasetId: reference
+    schema:
+      - name: "country"
+        type: "STRING"
+        mode: "NULLABLE"
+      - name: "tax_code"
+        type: "STRING"
+        mode: "NULLABLE"
+      - name: "vat_rate"
+        type: "FLOAT64"
+        mode: "NULLABLE"
+      - name: "custom_name"
+        type: "STRING"
+        mode: "NULLABLE"
+      - name: "iso_2_code"
+        type: "STRING"
+        mode: "NULLABLE"
+
+    fileFormat:
+      load: CSV
+      writeDisposition: WRITE_TRUNCATE
+      skipLeadingRows: 1
+      delimiter: '\t'
+      allowJaggedRows: true
+      transform:
+        from:
+      compression: none
+    dryRun: false
+    notes: a table with custom accounting tax names and tax codes. One off upload from s3.
+  
+  -
+    pipeName: country_tax_codes
+    bigqueryName: country_tax_codes 
+    datasetId: reference
+    schema:
+      - name: "geoname_id"
+        type: "STRING"
+        mode: "NULLABLE"
+      - name: "continent_code"
+        type: "STRING"
+        mode: "NULLABLE"
+      - name: "continent_name"
+        type: "STRING"
+        mode: "NULLABLE"
+      - name: "is_in_european_union"
+        type: "INT64"
+        mode: "NULLABLE"
+      - name: "iso_2_code"
+        type: "STRING"
+        mode: "NULLABLE"
+      - name: "iso_3_code"
+        type: "STRING"
+        mode: "NULLABLE"
+      - name: "country_name"
+        type: "STRING"
+        mode: "NULLABLE"
+      - name: "tax_code"
+        type: "STRING"
+        mode: "NULLABLE"
+
+    fileFormat:
+      load: CSV
+      writeDisposition: WRITE_TRUNCATE
+      skipLeadingRows: 1
+      delimiter: ','
+      allowJaggedRows: true
+      transform:
+        from:
+      compression: none
+    dryRun: false
+    notes: a table with country_iso_3 codes and names enriched with tax codes. One off upload from s3://bq-shakhomirov.bigquery.aws/country_tax_codes.csv
+
+  -
+    pipeName: exchange_rates
+    bigqueryName: exchange_rates
+    datasetId: production
+    schema:
+      - name: "src"
+        type: "STRING"
+        mode: "NULLABLE"
+    fileFormat:
+      load: CSV
+      delimiter: 'þ'
+      transform: 
+        from: OBJECT_STRING                   # transform from OBJECT_STRING to SRC, i.e. {...}{...}{...} >>> '{...}'\n'{...}'\n'{...}'\n
+      compression: none
+    dryRun: false
+    notes: External data comes from exchange-rates Lambda/Service.
+
+  -
+    pipeName: payment_transaction_src
+    bigqueryName: payment_transaction
+    datasetId: production
+    schema:
+      - name: "transaction_id"
+        type: "INT64"
+        mode: "NULLABLE"
+      - name: "payment_merchant_id"
+        type: "INT64"
+        mode: "NULLABLE"
+      - name: "merchant_invoice_code"
+        type: "STRING"
+        mode: "NULLABLE"
+      - name: "merchant_invoice_code_id"
+        type: "INT64"
+        mode: "NULLABLE"
+      - name: "user_id"
+        type: "INT64"
+        mode: "NULLABLE"
+      - name: "total_cost"
+        type: "FLOAT64"
+        mode: "NULLABLE"
+      - name: "currency_code"
+        type: "STRING"
+        mode: "NULLABLE"
+      - name: "payer_email"
+        type: "STRING"
+        mode: "NULLABLE"
+      - name: "country_code"
+        type: "STRING"
+        mode: "NULLABLE"  
+      - name: "payment_date"
+        type: "TIMESTAMP"
+        mode: "NULLABLE"
+      - name: "transaction_status"
+        type: "STRING"
+        mode: "NULLABLE"            
+      - name: "ip_address"
+        type: "STRING"
+        mode: "NULLABLE"                    
+      - name: "created_at"
+        type: "TIMESTAMP"
+        mode: "NULLABLE"
+      - name: "transaction_item_id"
+        type: "INT64"
+        mode: "NULLABLE"  
+      - name: "product_id"
+        type: "INT64"
+        mode: "NULLABLE" 
+      - name: "item_count"
+        type: "INT64"
+        mode: "NULLABLE"                       
+
+    partitionField: created_at
+    fileFormat: 
+      load: NLDJ
+      transform: 
+        from: OBJECT_STRING                   # from OBJECT_STRING to NLDJ, i.e. {....}{....}{....}
+      compression: none
+    dryRun: false
+    notes: Firehose subscriber_actions
+
+  -
+    pipeName: paypal_transaction              # pick all files which have this in file key.
+    bigqueryName: paypal_transaction_src      # BigQuery table name to insert data.
+    datasetId: source
+    schema:
+      - name: "src"
+        type: "STRING"
+        mode: "NULLABLE"
+    # partitionField: created_at              # if empty use date(ingestion time) as partition. Default.
+    fileFormat:
+      load: CSV                               # load as.
+      delimiter: 'þ'                          # hacky way of loading as one row
+      transform:                              # Transform from this into load format accepted by BigQuery.
+        from: OUTER_ARRAY_JSON                # Array of individual JSON objects to SRC, i.e. [{...},{...},{...}] >>> '{...}'\n'{...}'\n'{...}'\n
+      compression: none
+    dryRun: false                             # If true then don't insert into a table.
+    notes: Daily extract from PayPal API by bq-data-connectors/paypal-revenue AWS Lambda
+
+  -
+    pipeName: product_table
+    bigqueryName: product
+    datasetId: production
+    schema:
+      - name: "src"
+        type: "STRING"
+        mode: "NULLABLE"
+    fileFormat:
+      load: CSV
+      delimiter: 'þ'
+      transform: 
+        from: OUTER_ARRAY_JSON
+      compression: none
+    dryRun: false
+    notes: Example - Daily extract from MySQL connector AWS Lambda
+
+  -
+    pipeName: GeoIP2-Country-Blocks-IPv4 
+    bigqueryName: geoip2_country_blocks_ipv4 
+    datasetId: production
+    schema:
+      - name: "network"
+        type: "STRING"
+        mode: "NULLABLE"
+      - name: "geoname_id"
+        type: "INT64"
+        mode: "NULLABLE"
+      - name: "registered_country_geoname_id"
+        type: "INT64"
+        mode: "NULLABLE"
+      - name: "represented_country_geoname_id"
+        type: "INT64"
+        mode: "NULLABLE"
+      - name: "is_anonymous_proxy"
+        type: "INT64"
+        mode: "NULLABLE"
+      - name: "is_satellite_provider"
+        type: "INT64"
+        mode: "NULLABLE"
+    fileFormat:
+      load: CSV # load as
+      writeDisposition: WRITE_TRUNCATE
+      skipLeadingRows: 1
+      delimiter: ','
+      allowJaggedRows: true
+      transform:
+        from:
+      compression: none
+    dryRun: false
+    notes: For example, a table populated by geodb service which updates geo-to-ip tables from GeoLite.
+
+# saveTo:
+#   bucket: bq-shakhomirov.bigquery.aws
+#   key: switchboard/

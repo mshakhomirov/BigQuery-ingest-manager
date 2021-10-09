@@ -1,0 +1,5 @@
+bqIngestManagerService: bq-ingest-manager                           # AWS Lambda name.
+gcp:
+    bigQueryConfigS3: bq-shakhomirov-b86071c11c27.json              # Credentials file key in S3 bucket.
+    gcpClientEmail: bq-777@bq-shakhomirov.iam.gserviceaccount.com   # BigQuery-ingest-manager permissions account.
+

@@ -1,0 +1,32 @@
+country_name	tax_code		vat_rate	custom_name	iso_2_code
+UNITED KINGDOM	T1	0.2	20% (VAT on Income)	UK
+AUSTRIA	T40	0.2	MOSS - Austria - 20%	AT
+BELGIUM	T41	0.21	MOSS - Belgium - 21%	BE
+BULGARIA	T42	0.2	MOSS - Bulgaria - 20%	BG
+CROATIA	T43	0.25	MOSS - Croatia - 25%	HR
+CZECHIA	T44	0.21	MOSS - Czech Republic - 21%	CZ
+DENMARK	T45	0.25	MOSS - Denmark - 25%	DK
+ESTONIA	T46	0.2	MOSS - Estonia - 20%	EE
+FINLAND	T47	0.24	MOSS - Finland - 24%	FI
+FRANCE	T48	0.2	MOSS - France - 20%	FR
+GERMANY	T49	0.19	MOSS - Germany - 19%	DE
+GREECE	T50	0.24	MOSS - Greece - 24%	GR
+HUNGARY	T51	0.05	MOSS - Hungary - 5%	HU
+IRELAND	T52	0.23	MOSS - Ireland - 23%	IE
+ITALY	T53	0.22	MOSS - Italy - 22%	IT
+LATVIA	T54	0.21	MOSS - Latvia - 21%	LV
+LITHUANIA	T55	0.21	MOSS - Lithuania - 21%	LT
+LUXEMBOURG	T56	0.17	MOSS - Luxembourg - 17%	LU
+MALTA	T57	0.18	MOSS - Malta - 18%	MT
+NETHERLANDS	T58	0.21	MOSS - Netherlands - 21%	NL
+POLAND	T59	0.23	MOSS - Poland - 23%	PL
+PORTUGAL	T60	0.23	MOSS - Portugal - 23%	PT
+CYPRUS	T61	0.19	MOSS - Republic of Cyprus - 19%	CY
+ROMANIA	T62	0.19	MOSS - Romania - 19%	RO
+SLOVAKIA	T63	0.2	MOSS - Slovakia - 20%	SK
+SLOVENIA	T64	0.22	MOSS - Slovenia - 22%	SI
+SPAIN	T65	0.21	MOSS - Spain - 21%	ES
+SWEDEN	T66	0.25	MOSS - Sweden - 25%	SE
+Countries outside the EU	T67	0	MOSS - Countries outside the EU - 0%	
+SAUDI ARABIA	T68	0.15	Saudi Arabia - 15%	SA
+UNITED ARAB EMIRATES	T70	0.05	United Arab Emirates - 5%	AE

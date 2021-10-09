@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "bq-shakhomirov",
+  "private_key_id": "AAAAAAA",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nBBBBBBB\n-----END PRIVATE KEY-----\n",
+  "client_email": "bq-777@bq-shakhomirov.iam.gserviceaccount.com",
+  "client_id": "12345",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/bq-777%40bq-shakhomirov.iam.gserviceaccount.com"
+}

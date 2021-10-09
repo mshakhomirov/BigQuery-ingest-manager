@@ -1,0 +1,40 @@
+# compiled output
+**/dist
+**/global-s3-assets
+**/regional-s3-assets
+**/open-source
+**/*.zip
+**/.zip
+**/tmp/*
+**/out-tsc
+**/settings.js
+**/packaged.template
+packaged.template
+**/*_tmp.*
+
+# dependencies
+**/node_modules
+**/coverage
+# **/package.json
+
+# e2e
+**/e2e/*.js
+**/e2e/*.map
+
+# misc
+**/npm-debug.log
+**/testem.log
+**/.env
+# package-lock.json
+**/.vscode/settings.json
+**/setenv.sh
+**/bq-shakhomirov-b86071c11c27.json
+**/notes.md
+
+# System Files
+**/.DS_Store
+*.DS_Store
+**/.vscode
+
+#nyc output
+**/.nyc_output

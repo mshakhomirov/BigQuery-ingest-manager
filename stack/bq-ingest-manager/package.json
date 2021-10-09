@@ -1,0 +1,36 @@
+{
+  "name": "bq-ingest-manager",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lambda function to process BigQuery data ingestion events",
+  "main": "app.js",
+  "scripts": {
+    "test": "export DEBUG=true; export NODE_ENV=staging; run-local-lambda --file app.js --event test/data.json --timeout 10000",
+    "test-integration": "export NODE_ENV=integrationTest; run-local-lambda --file app.js --event test/integration/integrationTestData.json --timeout 10000",
+    "test-service": "export NODE_ENV=integrationTest; run-local-lambda --file loadTestIngestManager.js --event test/integration/loadTestPipelines.json --timeout 10000",
+    "test-load": "export DEBUG=metrics; export NODE_ENV=staging; run-local-lambda --file app.js --event test/integration/loadTestPayload.json --timeout 10000",
+    "predeploy": "rm -rf node_modules;npm i --only=production"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "author": "Mike Shakhomirov mshakhomirov.medium.com",
+  "license": "ISC",
+  "devDependencies": {
+    "aws-sdk": "2.804.0",
+    "run-local-lambda": "1.1.1",
+    "eslint": "^7.20.0",
+    "eslint-plugin-classes": "^0.1.1",
+    "eslint-plugin-promise": "^4.3.1"
+  },
+  "dependencies": {
+    "@google-cloud/bigquery": "^5.7.0",
+    "JSONStream": "^1.3.5",
+    "config": "^3.3.6",
+    "event-stream": "^4.0.1",
+    "js-yaml": "^4.1.0",
+    "moment": "^2.24.0",
+    "through2": "^4.0.2",
+    "zlib": "^1.0.5"
+  }
+}

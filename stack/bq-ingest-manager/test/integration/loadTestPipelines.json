@@ -1,0 +1,52 @@
+{
+    "Records": [
+      {
+        "pipeName": "accounting_tax_type",
+        "enabled": false,
+        "bucket": {
+          "name": "bq-shakhomirov.bigquery.aws"
+        },
+        "object": {
+          "key": ""
+        },
+        "datePrefix": "",
+        "example": "accounting_tax_type.csv"
+      },
+      {
+        "pipeName": "payment_transaction_src",
+        "enabled": false,
+        "bucket": {
+          "name": "bq-shakhomirov.bigquery.aws"
+        },
+        "object": {
+          "key": ""
+        },
+        "datePrefix": "",
+        "example": "payment_transaction_src"
+      },
+      {
+        "pipeName": "country_tax_codes",
+        "enabled": false,
+        "bucket": {
+          "name": "bq-shakhomirov.bigquery.aws"
+        },
+        "object": {
+          "key": ""
+        },
+        "datePrefix": "",
+        "example": "country_tax_codes.csv"
+      },
+      {
+        "pipeName": "paypal_transaction_raw",
+        "enabled": true,
+        "bucket": {
+          "name": "bq-shakhomirov.bigquery.aws"
+        },
+        "object": {
+          "key": "reconcile/paypal_transaction/"
+        },
+        "datePrefix": "2021/10/03",
+        "example": "reconcile/paypal_transaction/2021/10/03/05/paypal_transaction181"
+      }
+    ]
+  }

@@ -1,0 +1,264 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  ServiceName:
+    Description: Name of your module (e.g. data-services).
+    Type: String
+    MinLength: 1
+    Default: bq-ingest-manager
+  Testing:
+    Type: String
+    AllowedValues: ['true','false']
+    Default: 'true'
+  Environment:
+    Type: String
+    AllowedValues: ['staging','production']
+    Default: 'staging'
+  SourceDataBucketName:
+    Description: Data bucket with source data files to be ingested into -data BigQuery project. Temporary data lake. 90 days retention for data.
+    Type: String
+    Default: 'bq-shakhomirov.bigquery.aws'
+  IngestManagerSuccessTableName:
+    Type: String
+    Default: 'ingest-manager-success'
+  Email:
+    Type: String
+    Description: Email address to notify when Lambda has triggered an alarm
+    Default: 'mike.shakhomirov@gmail.com' #Default: 'arn:aws:sns:eu-west-1:****account number:Alerts'
+
+Resources:
+  AlarmNotificationTopic:
+    Type: 'AWS::SNS::Topic'
+    Properties:
+      Subscription:
+        - Endpoint: !Ref Email
+          Protocol: email
+  # stores successfull data ingestion events
+  IngestManagerSuccessTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: "fileKey"
+          AttributeType: "S"
+      KeySchema:
+        -
+          AttributeName: "fileKey"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+            ReadCapacityUnits: "1"
+            WriteCapacityUnits: "1"
+      TableName:
+        Ref: IngestManagerSuccessTableName
+
+  LambdaPolicy:
+    Type: AWS::IAM::Policy
+    DependsOn: LambdaRole
+    Properties:
+      Roles:
+        - !Ref LambdaRole
+      PolicyName: 'bigquery-pipe-lambda-policy'
+      PolicyDocument:
+        {
+          "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Sid": "",
+                    "Effect": "Allow",
+                    "Action": "s3:*",
+                    "Resource": "*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "lambda:*"
+                  ],
+                  "Resource": [
+                    "*"
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ec2:CreateNetworkInterface",
+                    "ec2:DescribeNetworkInterfaces",
+                    "ec2:DeleteNetworkInterface",
+                  ],
+                  "Resource": [
+                    "*"
+                  ]
+                },
+                {
+                  "Sid": "",
+                  "Effect": "Allow",
+                  "Action": [
+                      "logs:*"
+                  ],
+                  "Resource": [
+                      "arn:aws:logs:*:log-group:/aws/lambda/*:*"
+                  ]
+                },
+                {
+                    "Sid": "CloudWatchEventsFullAccess",
+                    "Effect": "Allow",
+                    "Action": "events:*",
+                    "Resource": ["*"]
+                },
+                {
+                    "Sid": "IAMPassRoleForCloudWatchEvents",
+                    "Effect": "Allow",
+                    "Action": "iam:PassRole",
+                    "Resource": ["arn:aws:iam::*:role/AWS_Events_Invoke_Targets"]
+                },
+                {
+                  "Action": [
+                      "rds:Describe*",
+                      "rds:ListTagsForResource",
+                      "ec2:DescribeAccountAttributes",
+                      "ec2:DescribeAvailabilityZones",
+                      "ec2:DescribeInternetGateways",
+                      "ec2:DescribeSecurityGroups",
+                      "ec2:DescribeSubnets",
+                      "ec2:DescribeVpcAttribute",
+                      "ec2:DescribeVpcs"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+              },
+              {
+                  "Action": [
+                      "cloudwatch:GetMetricStatistics",
+                      "logs:DescribeLogStreams",
+                      "logs:GetLogEvents"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+              },
+              {
+                    "Sid": "DynamoDBAccess",
+                    "Effect": "Allow",
+                    "Action": [
+                         "dynamodb:*"
+                        ],
+                    "Resource": "*"
+              }
+  
+            ]
+        }
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+
+  IngestManagerLambda:
+    Type: AWS::Serverless::Function
+    DependsOn: LambdaPolicy
+    Properties:
+      # see https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#property-types
+      Handler: bq-ingest-manager/app.handler
+      Runtime: nodejs12.x
+      FunctionName: bq-ingest-manager
+      Description: Microservice that loads data into BigQuery
+      Environment:
+        Variables:
+          DEBUG: "false"
+          TESTING: !Ref Testing
+          DB_BUCKET_TEST: "bq-shakhomirov.bigquery.aws"
+          DB_BUCKET: "bq-shakhomirov.bigquery.aws"
+          DYNAMO_SUCCESS_TABLE: !Ref IngestManagerSuccessTableName #"ingest-manager-success"
+          NODE_ENV: "production"
+          CHECK_FILE_DUPLICATES: "true"
+      Role: !GetAtt LambdaRole.Arn
+      Timeout: 190          # timeout in seconds
+      MemorySize: 256
+      Tags:
+        Service: BigQuery
+
+  IngestManagerLambdaLogGroup:
+    Type: 'AWS::Logs::LogGroup'
+    Properties:
+      RetentionInDays: 7
+      LogGroupName: /aws/lambda/bq-ingest-manager
+
+  IngestManagerLambdaERRORMetricFilter:
+    Type: 'AWS::Logs::MetricFilter'
+    DependsOn: IngestManagerLambdaLogGroup
+    Properties:
+      LogGroupName: /aws/lambda/bq-ingest-manager
+      FilterPattern: ?ERROR ?Error ?error
+      MetricTransformations:
+        - MetricValue: '1'
+          MetricNamespace: bq-ingest-manager # !Ref ServiceName 
+          MetricName: ERRORCount
+  
+  IngestManagerLambdaERRORMetricAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    DependsOn: IngestManagerLambdaERRORMetricFilter
+    Properties:
+      AlarmDescription: Trigger a the number ERROR greater than 5 for 5 consecutive minutes.
+      Namespace: bq-ingest-manager # !Ref ServiceName
+      MetricName: ERRORCount
+      Statistic: Sum
+      Period: '60'
+      EvaluationPeriods: '5'
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: '0'
+      AlarmActions:
+        - !Ref AlarmNotificationTopic
+
+  # DataBucket:
+  #     Type: AWS::S3::Bucket
+  #     DeletionPolicy: Retain
+  #     # DependsOn:
+  #     #   - PermissionForEventsToInvokeIngestManagerLambda
+  #     Properties:
+  #       BucketName: !Ref SourceDataBucketName
+  #       PublicAccessBlockConfiguration:
+  #         BlockPublicAcls: true
+  #         IgnorePublicAcls: false
+  #         BlockPublicPolicy: true
+  #         RestrictPublicBuckets: true
+  #       AccessControl: Private
+  #       LifecycleConfiguration: # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-bucket-lifecycleconfig-rule.html
+  #         Rules:
+  #           - Id: DataBucketRule
+  #             # Prefix: glacier
+  #             Status: Enabled
+  #             # ExpirationInDays: 365
+  #             Transitions:
+  #               - TransitionInDays: 90
+  #                 StorageClass: INTELLIGENT_TIERING
+  #       NotificationConfiguration:
+  #         LambdaConfigurations:
+  #           - Event: s3:ObjectCreated:*
+  #             Function: !GetAtt IngestManagerLambda.Arn
+  #             Filter:
+  #               S3Key:
+  #                 Rules:
+  #                 # - Name: suffix
+  #                 #   Value: .txt
+  #                 - Name: prefix
+  #                   Value: geodb/
+      
+
+  # PermissionForEventsToInvokeOrchestratorLambda:
+  #   Type: "AWS::Lambda::Permission"
+  #   Properties:
+  #     FunctionName:
+  #       Ref: IngestManagerLambda
+  #     Action: "lambda:InvokeFunction"
+  #     Principal: s3.amazonaws.com
+  #     SourceArn: !Sub 'arn:aws:s3:::${SourceDataBucketName}'
+
+

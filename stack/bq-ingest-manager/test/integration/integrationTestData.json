@@ -1,0 +1,24 @@
+{
+    "Records": [
+      {
+        
+        "bucket": {
+          "name": "bq-shakhomirov.bigquery.aws"
+        },
+        "object": {
+          "key": "accounting_tax_type.csv"
+        }
+        
+      },
+      {
+        
+        "bucket": {
+          "name": "bq-shakhomirov.bigquery.aws"
+        },
+        "object": {
+          "key": "reconcile/paypal_transaction/2021/10/03/05/paypal_transaction181"
+        }
+        
+      }
+    ]
+  }
