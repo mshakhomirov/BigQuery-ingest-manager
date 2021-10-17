@@ -11,7 +11,7 @@ Simple and reliable ingest manager for BigQuery written in Node.JS
 - Support for unit and integration tests.
 
 # Solution overview
-Todo: add diagramme
+[img](img/ingestManager.drawio.png)
 
 # Prerequisites
 - AWS account
